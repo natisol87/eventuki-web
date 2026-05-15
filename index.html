@@ -31,109 +31,246 @@
     overflow: hidden;
   }
 
+  /* ── Header ── */
   header {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 14px 20px;
-    background: var(--dark2);
+    background: rgba(10,10,20,.9);
     border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    flex-shrink: 0;
+    z-index: 10;
   }
 
-  .logo { width: 38px; height: 38px; border-radius: 10px; }
-  .header-info h1 { font-size: 1.1rem; color: #fff; }
-  .header-info p { font-size: 0.75rem; color: var(--text2); }
+  .logo {
+    width: 46px; height: 46px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
 
+  .logo img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+  }
+
+  .header-text h1 {
+    font-size: 20px; font-weight: 800; letter-spacing: -.5px;
+  }
+
+  .header-text h1 span { color: var(--pink); }
+
+  .header-text p {
+    font-size: 11px; color: var(--text2); font-style: italic; margin-top: 1px;
+  }
+
+  .header-right {
+    margin-left: auto;
+    display: flex; gap: 8px;
+  }
+
+  .btn-new {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-new:hover { border-color: var(--pink); color: var(--pink); }
+
+  /* ── Messages ── */
   #messages {
     flex: 1;
     overflow-y: auto;
-    padding: 20px;
+    padding: 20px 16px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
+    max-width: 780px;
+    width: 100%;
+    margin: 0 auto;
   }
 
-  .msg { max-width: 85%; padding: 12px 16px; border-radius: var(--radius); line-height: 1.5; font-size: 0.95rem; }
-  .bot { background: var(--dark3); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
-  .user { background: var(--purple); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+  #messages::-webkit-scrollbar { width: 4px; }
+  #messages::-webkit-scrollbar-track { background: transparent; }
+  #messages::-webkit-scrollbar-thumb { background: rgba(232,23,93,.3); border-radius: 2px; }
 
-  .chat-input-area {
-    padding: 16px 20px;
-    background: var(--dark2);
+  .msg-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    animation: fadeUp .25s ease;
+  }
+
+  .msg-row.user { justify-content: flex-end; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .avatar {
+    width: 38px; height: 38px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+  }
+
+  .avatar img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+  }
+
+  .bubble-wrap { max-width: 78%; display: flex; flex-direction: column; gap: 8px; }
+
+  .bubble {
+    padding: 11px 15px;
+    border-radius: 4px 16px 16px 16px;
+    font-size: 14px; line-height: 1.6;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.09);
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  .msg-row.user .bubble {
+    background: linear-gradient(135deg, var(--pink), var(--pink2));
+    border: none;
+    border-radius: 16px 16px 4px 16px;
+    color: #fff;
+  }
+
+  /* ── Input Area ── */
+  .input-area {
+    padding: 12px 16px 16px;
     border-top: 1px solid var(--border);
+    background: rgba(10,10,20,.85);
+    backdrop-filter: blur(20px);
+    flex-shrink: 0;
+  }
+
+  .input-container {
+    max-width: 780px;
+    margin: 0 auto;
     display: flex;
     gap: 10px;
   }
 
-  input {
+  #chat-input {
     flex: 1;
-    background: var(--dark3);
-    border: 1px solid var(--border);
-    color: white;
-    padding: 12px 16px;
-    border-radius: 25px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(232,23,93,.3);
+    border-radius: 24px;
+    color: var(--text);
+    padding: 11px 18px;
+    font-size: 14px;
     outline: none;
   }
 
-  button {
-    background: var(--pink);
-    color: white;
+  #send-btn {
+    padding: 11px 22px;
+    border-radius: 24px;
     border: none;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: linear-gradient(135deg, var(--pink), var(--pink2));
+    color: #fff;
+    font-weight: 700;
   }
+
+  .typing { display: flex; gap: 4px; padding: 10px; }
+  .dot { width: 6px; height: 6px; background: var(--pink); border-radius: 50%; animation: bounce 1.4s infinite; }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
 </style>
 </head>
 <body>
 
 <header>
-  <img src="logo.png" class="logo" alt="logo">
-  <div class="header-info">
-    <h1>EVENTUKI</h1>
-    <p>Guía de eventos en Buenos Aires</p>
+  <div class="logo">
+    <img src="logo.png" alt="E">
+  </div>
+  <div class="header-text">
+    <h1>EVENT<span>UKI</span></h1>
+    <p>"Si la ciudad no duerme, su agenda tampoco."</p>
+  </div>
+  <div class="header-right">
+    <button onclick="newChat()" class="btn-new">Nueva charla</button>
   </div>
 </header>
 
 <div id="messages"></div>
 
-<div class="chat-input-area">
-  <input type="text" id="chat-input" placeholder="¿Qué hacemos hoy?">
-  <button onclick="send()">➔</button>
+<div class="input-area">
+  <div class="input-container">
+    <input type="text" id="chat-input" placeholder="¿Qué hay para hacer hoy?" onkeypress="if(event.key==='Enter') send()">
+    <button id="send-btn" onclick="send()">Enviar</button>
+  </div>
 </div>
 
 <script>
-  // URL de tu Space en Hugging Face
+  // URL DE TU BACKEND EN HUGGING FACE
   const API_URL = "https://natisol87-eventuki-api.hf.space";
+  let SESSION_ID = Math.random().toString(36).substring(7);
+
+  const msgDiv = document.getElementById('messages');
+  const input = document.getElementById('chat-input');
+
+  function addMessage(text, side) {
+    const row = document.createElement('div');
+    row.className = `msg-row ${side}`;
+    row.innerHTML = `
+      <div class="bubble-wrap">
+        <div class="bubble">${text}</div>
+      </div>
+    `;
+    msgDiv.appendChild(row);
+    msgDiv.scrollTop = msgDiv.scrollHeight;
+  }
 
   async function send() {
-    const inp = document.getElementById('chat-input');
-    const msgArea = document.getElementById('messages');
-    const text = inp.value.trim();
-    if (!text) return;
+    const text = input.value.trim();
+    if(!text) return;
+    
+    addMessage(text, 'user');
+    input.value = '';
 
-    // Mostrar mensaje usuario
-    msgArea.innerHTML += `<div class="msg user">${text}</div>`;
-    inp.value = '';
-    msgArea.scrollTop = msgArea.scrollHeight;
+    const typing = document.createElement('div');
+    typing.className = 'typing';
+    typing.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+    msgDiv.appendChild(typing);
 
     try {
       const res = await fetch(API_URL + '/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({ message: text, session_id: SESSION_ID })
       });
       const data = await res.json();
-      msgArea.innerHTML += `<div class="msg bot">${data.response}</div>`;
+      msgDiv.removeChild(typing);
+      addMessage(data.response, 'bot');
     } catch (e) {
-      msgArea.innerHTML += `<div class="msg bot">Error conectando con el servidor. Revisá que el Space esté en "Running".</div>`;
+      msgDiv.removeChild(typing);
+      addMessage("Error conectando con el servidor.", 'bot');
     }
-    msgArea.scrollTop = msgArea.scrollHeight;
   }
+
+  function newChat() {
+    msgDiv.innerHTML = '';
+    SESSION_ID = Math.random().toString(36).substring(7);
+    showWelcome();
+  }
+
+  function showWelcome() {
+    addMessage('¡Buenas! Soy EVENTUKI, tu guía de eventos en Buenos Aires. 🎉\n\nContame qué buscás.', 'bot');
+  }
+
+  showWelcome();
 </script>
+
 </body>
 </html>
