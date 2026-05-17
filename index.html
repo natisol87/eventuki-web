@@ -29,11 +29,12 @@
 
 html { scroll-behavior: smooth; }
 
+html { overflow-x: hidden; }
+
 body {
   font-family: 'Poppins', system-ui, -apple-system, sans-serif;
   background: var(--dark);
   color: var(--text);
-  overflow-x: hidden;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -663,6 +664,12 @@ footer {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  pointer-events: all;
+}
+
+/* Asegurar que el body con overflow:hidden no bloquee el fixed widget */
+body {
+  position: relative;
 }
 
 #chat-toggle {
@@ -726,7 +733,7 @@ footer {
   to   { opacity:1; transform: scale(1) translateY(0); }
 }
 
-#chat-panel.hidden { display: none; }
+#chat-panel.hidden { display: none !important; }
 
 .cp-header {
   display: flex;
@@ -1533,14 +1540,21 @@ if (CP_API && CP_API !== 'https://natisol87-eventuki-api.hf.space') {
 
 // ── Toggle panel ───────────────────────────────────────────────────────────────
 function toggleChat() {
-  cpOpen = !cpOpen;
-  const panel = document.getElementById('chat-panel');
-  const badge = document.querySelector('.chat-badge');
-  if (cpOpen) {
-    panel.classList.remove('hidden');
-    if (badge) badge.style.display = 'none';
-  } else {
-    panel.classList.add('hidden');
+  try {
+    cpOpen = !cpOpen;
+    const panel = document.getElementById('chat-panel');
+    if (!panel) { console.error('EVENTUKI: panel no encontrado'); return; }
+    const badge = document.querySelector('.chat-badge');
+    if (cpOpen) {
+      panel.classList.remove('hidden');
+      panel.style.display = 'flex';
+      if (badge) badge.style.display = 'none';
+    } else {
+      panel.classList.add('hidden');
+      panel.style.display = 'none';
+    }
+  } catch(e) {
+    console.error('EVENTUKI toggleChat error:', e);
   }
 }
 
