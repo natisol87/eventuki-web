@@ -1538,7 +1538,7 @@ function toggleChat() {
   const badge = document.querySelector('.chat-badge');
   if (cpOpen) {
     panel.classList.remove('hidden');
-    badge.style.display = 'none';
+    if (badge) badge.style.display = 'none';
   } else {
     panel.classList.add('hidden');
   }
