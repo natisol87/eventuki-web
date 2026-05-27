@@ -31,6 +31,49 @@
 
 html { scroll-behavior: smooth; }
 
+/* ═══════════════════════════════════════════════════════════
+   MODO CHAT STANDALONE (?chat=1)
+══════════════════════════════════════════════════════════════ */
+body.chat-only {
+  overflow: hidden;
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+}
+
+body.chat-only > *:not(#chat-bubble) { display: none !important; }
+
+body.chat-only #chat-bubble {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  display: block !important;
+}
+
+body.chat-only #chat-toggle { display: none !important; }
+
+body.chat-only #chat-panel {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: unset !important;
+  min-height: unset !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  bottom: auto !important;
+  right: auto !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  resize: none !important;
+  display: flex !important;
+  animation: none !important;
+}
+
+body.chat-only .cp-close[onclick="cpOpenExternal()"] { display: none !important; }
+
 html { overflow-x: hidden; }
 
 body {
@@ -1267,7 +1310,7 @@ body {
     <p class="hero-slogan">Si la ciudad no duerme, su agenda tampoco.</p>
     <p class="hero-sub">
       El asistente inteligente de eventos culturales para Buenos Aires.
-      Recitales, ferias, fiestas y teatro disponible las 24 horas del día, los 365 días del año.
+      Información de recitales, ferias, fiestas y teatro disponible las 24 horas del día, los 365 días del año.
     </p>
     <div class="hero-btns">
       <a href="#" class="btn-primary" onclick="openChat(); return false;">💬 Probar el chatbot</a>
@@ -1610,6 +1653,18 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Toggle panel ───────────────────────────────────────────────────────────────
+// ── Modo chat standalone (?chat=1) ──────────────────────────
+(function() {
+  if (new URLSearchParams(window.location.search).get('chat') === '1') {
+    document.body.classList.add('chat-only');
+    document.addEventListener('DOMContentLoaded', function() {
+      const panel = document.getElementById('chat-panel');
+      if (panel) panel.classList.remove('hidden');
+      cpOpen = true;
+    });
+  }
+})();
+
 function toggleChat() {
   try {
     cpOpen = !cpOpen;
@@ -1807,27 +1862,9 @@ async function cpCallAPI(message, onDone) {
 }
 
 function cpOpenExternal() {
-  const currentUrl = window.location.href;
-  const win = window.open('', '_blank');
-  if (win) {
-    win.document.write(`
-      <html>
-        <head>
-          <title>EVENTUKI - Chat</title>
-          <style>
-            body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0A0A14; }
-            iframe { width: 100%; height: 100%; border: none; }
-          </style>
-        </head>
-        <body>
-          <iframe src="${currentUrl}"></iframe>
-        </body>
-      </html>
-    `);
-    win.document.close();
-  } else {
-    alert("Por favor, permite las ventanas emergentes para abrir el chat en una pestaña nueva.");
-  }
+  const url = new URL(window.location.href);
+  url.searchParams.set('chat', '1');
+  window.open(url.toString(), '_blank');
 }
 
 function cpShowEventForm() {
