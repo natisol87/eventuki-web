@@ -5,6 +5,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Titan+One&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>EVENTUKI — Tu agenda cultural 24/7 en Buenos Aires</title>
 <style>
@@ -713,12 +715,16 @@ body {
   right: 0;
   width: 400px;
   height: 580px;
+  min-width: 300px;
+  min-height: 400px;
+  max-width: 90vw;
+  max-height: 85vh;
   background: #0E0E1C;
   border-radius: 24px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* Sombra fuerte para efecto flotante */
+  resize: both;
   box-shadow:
     0 32px 80px rgba(0,0,0,.75),
     0 8px 32px rgba(0,0,0,.5),
@@ -726,6 +732,10 @@ body {
   transform-origin: bottom right;
   animation: panelOpen .28s cubic-bezier(.34,1.56,.64,1);
   z-index: 999;
+}
+
+#chat-panel > div:not(.cp-header):not(.cp-input-area) {
+  flex: 1;
 }
 
 @keyframes panelOpen {
@@ -1544,7 +1554,10 @@ body {
         <span>Asistente de eventos · Buenos Aires</span>
       </div>
       <span class="cp-online"></span>
-      <button class="cp-close" onclick="toggleChat()">✕</button>
+      <div style="display:flex; gap:8px; margin-left:auto; align-items:center;">
+        <button class="cp-close" onclick="cpOpenExternal()" title="Abrir en pestaña nueva" style="cursor:pointer; opacity:0.8;">↗</button>
+        <button class="cp-close" onclick="toggleChat()" title="Cerrar">✕</button>
+      </div>
     </div>
 
     <!-- Config si no hay URL -->
@@ -1650,6 +1663,7 @@ function cpInitialOptions() {
   return '<div class="cp-sug">' +
     '<button class="cp-sug-btn" onclick="cpPickOption(\'buscar\')">🔍 Enterarme de un evento</button>' +
     '<button class="cp-sug-btn" onclick="cpPickOption(\'agregar\')">➕ Agregar un evento</button>' +
+    '<button class="cp-sug-btn" onclick="cpPickOption(\'eliminar\')">🗑️ Eliminar un evento cargado</button>' +
     '</div>';
 }
 
@@ -1658,9 +1672,12 @@ function cpPickOption(opt) {
   if (opt === 'buscar') {
     cpAddMsg('Quiero enterarme de un evento', 'user');
     cpAddMsg('¡Genial! ¿Qué tipo de evento buscás? 🎉', 'bot', null, cpEventTypes());
-  } else {
+  } else if (opt === 'agregar') {
     cpAddMsg('Quiero agregar un evento', 'user');
     cpShowEventForm();
+  } else if (opt === 'eliminar') {
+    cpAddMsg('Quiero eliminar un evento', 'user');
+    cpShowDeleteList();
   }
 }
 
@@ -1790,12 +1807,27 @@ async function cpCallAPI(message, onDone) {
 }
 
 function cpOpenExternal() {
+  const currentUrl = window.location.href;
   const win = window.open('', '_blank');
-  win.document.write('<html><head><title>EVENTUKI Chat</title>');
-  win.document.write('<style>body{margin:0;padding:0;background:#0A0A14;} iframe{width:100%;height:100vh;border:none;}</style>');
-  win.document.write('</head><body>');
-  win.document.write('<iframe src="' + window.location.href + '"></iframe>');
-  win.document.write('</body></html>');
+  if (win) {
+    win.document.write(`
+      <html>
+        <head>
+          <title>EVENTUKI - Chat</title>
+          <style>
+            body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0A0A14; }
+            iframe { width: 100%; height: 100%; border: none; }
+          </style>
+        </head>
+        <body>
+          <iframe src="${currentUrl}"></iframe>
+        </body>
+      </html>
+    `);
+    win.document.close();
+  } else {
+    alert("Por favor, permite las ventanas emergentes para abrir el chat en una pestaña nueva.");
+  }
 }
 
 function cpShowEventForm() {
@@ -1812,10 +1844,10 @@ function cpShowEventForm() {
         <option value="Obra de teatro">🎭 Obra de teatro</option>
       </select>
       
-      <label>Fecha y Hora</label>
+      <label>Fecha (dd/mm/aaaa) y Hora *</label>
       <div style="display:flex; gap:5px;">
-        <input type="date" id="f-fecha" style="flex:2;">
-        <input type="time" id="f-hora" style="flex:1;">
+        <input type="text" id="f-fecha" placeholder="dd/mm/aaaa" style="flex:2;" required>
+        <input type="time" id="f-hora" style="flex:1;" required>
       </div>
       
       <label>Lugar</label>
@@ -1827,13 +1859,21 @@ function cpShowEventForm() {
       <label>Descripción Corta</label>
       <textarea id="f-desc" rows="2" placeholder="De qué trata..."></textarea>
       
-      <label>URL Entradas (opcional)</label>
-      <input type="url" id="f-url" placeholder="https://...">
+      <label>URL Entradas *</label>
+      <input type="url" id="f-url" placeholder="https://..." required>
       
       <button class="cp-form-btn" onclick="cpSubmitEvent()">🚀 Guardar Evento</button>
     </div>
   `;
   cpAddMsg('Completá los datos para agregar tu evento:', 'bot', null, formHtml);
+  
+  // Inicializar Flatpickr para el campo de fecha
+  flatpickr("#f-fecha", {
+    dateFormat: "d/m/Y",
+    locale: "es",
+    allowInput: true,
+    theme: "dark"
+  });
 }
 
 async function cpSubmitEvent() {
@@ -1850,6 +1890,15 @@ async function cpSubmitEvent() {
   };
 
   if (!data.nombre) { alert('El nombre es obligatorio'); return; }
+  if (!data.fecha) { alert('La fecha es obligatoria'); return; }
+  if (!data.url_entradas) { alert('La URL es obligatoria'); return; }
+
+  // Validar formato de fecha dd/mm/aaaa
+  const fechaReg = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+  if (!fechaReg.test(data.fecha)) {
+    alert('Por favor, ingresá la fecha en formato dd/mm/aaaa');
+    return;
+  }
 
   btn.disabled = true;
   btn.textContent = 'Guardando...';
@@ -1864,6 +1913,7 @@ async function cpSubmitEvent() {
     
     document.getElementById('event-form').innerHTML = '<p style="color:var(--gold); text-align:center; font-weight:bold;">✅ ¡Evento guardado con éxito!</p>';
     cpAddMsg('¡Listo! Ya guardé el evento en la base de datos. ¿En qué más te ayudo?', 'bot');
+    setTimeout(cpWelcome, 2000);
   } catch (e) {
     alert('Error: ' + e.message);
     btn.disabled = false;
@@ -1871,7 +1921,52 @@ async function cpSubmitEvent() {
   }
 }
 
-</script>
+async function cpShowDeleteList() {
+  cpAddMsg('⏳ Cargando eventos para eliminar...', 'bot');
+  try {
+    const r = await fetch(CP_API + '/eventos');
+    const eventos = await r.json();
+    
+    if (!eventos || eventos.length === 0) {
+      cpAddMsg('No hay eventos registrados para eliminar. 🤷‍♂️', 'bot');
+      setTimeout(cpWelcome, 1500);
+      return;
+    }
 
-</body>
-</html>
+    let listHtml = '<div class="cp-sug" style="flex-direction:column; align-items:stretch; gap:8px;">';
+    eventos.forEach(ev => {
+      listHtml += `
+        <button class="cp-sug-btn" style="text-align:left; padding:10px; font-size:13px; line-height:1.4;" onclick="cpDeleteEvent(${ev.id}, '${ev.nombre.replace(/'/g, "\\'")}')">
+          🗑️ <b>${ev.nombre}</b><br>
+          <small style="opacity:0.7;">${ev.fecha} - ${ev.lugar}</small>
+        </button>
+      `;
+    });
+    listHtml += '<button class="cp-sug-btn" onclick="cpWelcome()" style="background:#333; margin-top:10px;">🔙 Volver</button></div>';
+    
+    cpAddMsg('Seleccioná el evento que deseás eliminar:', 'bot', null, listHtml);
+  } catch (e) {
+    cpAddMsg('❌ Error al cargar la lista de eventos.', 'bot');
+    setTimeout(cpWelcome, 1500);
+  }
+}
+
+async function cpDeleteEvent(id, nombre) {
+  if (!confirm(`¿Estás seguro de que querés eliminar el evento "${nombre}"?`)) return;
+  
+  try {
+    const r = await fetch(`${CP_API}/eventos/${id}`, { method: 'DELETE' });
+    if (!r.ok) throw new Error();
+    
+    cpAddMsg(`✅ El evento "${nombre}" ha sido eliminado correctamente.`, 'bot');
+    setTimeout(cpWelcome, 1500);
+  } catch (e) {
+    alert('Hubo un problema al intentar eliminar el evento.');
+  }
+}
+
+	</script>
+	<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+	<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+	</body>
+	</html>
